@@ -2,32 +2,41 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Poster Pro Max</title>
+<title>Poster Ultimate</title>
 
 <style>
 body {
   margin:0;
-  font-family: 'Segoe UI', sans-serif;
+  font-family:'Segoe UI',sans-serif;
   display:flex;
   flex-direction:column;
   align-items:center;
   background:#020617;
 }
 
-/* Controls */
+/* CONTROLS */
 .controls {
-  margin:10px;
-  text-align:center;
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap:10px;
+  margin:15px;
+  width:90%;
+  max-width:600px;
 }
 
-button, select, input {
-  margin:5px;
-  padding:8px;
-  border-radius:8px;
+.controls button,
+.controls select,
+.controls input {
+  padding:12px;
+  font-size:14px;
+  border-radius:10px;
   border:none;
+  cursor:pointer;
+  background:#1e293b;
+  color:white;
 }
 
-/* Poster */
+/* POSTER */
 .poster {
   width:420px;
   height:700px;
@@ -38,18 +47,18 @@ button, select, input {
   background:#020617;
 }
 
-/* Background image */
-.poster img.bg {
+/* BACKGROUND IMAGE */
+.poster .bg {
   position:absolute;
+  inset:0;
   width:100%;
   height:100%;
   object-fit:cover;
-  opacity:0.3;
-  top:0;
-  left:0;
+  opacity:0.35;
+  z-index:0;
 }
 
-/* Border */
+/* BORDER */
 .poster::before {
   content:"";
   position:absolute;
@@ -58,6 +67,7 @@ button, select, input {
   background:linear-gradient(45deg,#38bdf8,#a855f7,#ec4899,#f59e0b);
   background-size:300%;
   animation:move 8s linear infinite;
+  z-index:1;
 }
 
 .poster::after {
@@ -66,6 +76,7 @@ button, select, input {
   inset:3px;
   border-radius:22px;
   background:inherit;
+  z-index:2;
 }
 
 @keyframes move {
@@ -73,37 +84,73 @@ button, select, input {
   100%{background-position:300%}
 }
 
-/* Content */
+/* CONTENT */
 .poster-content {
   position:relative;
-  z-index:2;
+  z-index:5;
   top:50%;
   transform:translateY(-50%);
   text-align:center;
 }
 
 .quote {
-  font-size:26px;
+  font-size:28px;
   color:white;
   margin-bottom:20px;
 }
 
 .author {
-  font-size:18px;
+  font-size:20px;
   font-weight:bold;
+  color:#38bdf8;
 }
 
-/* Particles */
+/* STARS */
 .star {
   position:absolute;
-  width:5px;
-  height:5px;
+  width:4px;
+  height:4px;
   background:white;
   border-radius:50%;
-  opacity:0.6;
-  animation:float 8s linear infinite;
+  box-shadow:0 0 8px white;
+  opacity:0.8;
+  animation:float 10s linear infinite;
+  z-index:3;
 }
 
+/* GEOMETRIC SHAPES */
+.shape {
+  position:absolute;
+  opacity:0.3;
+  z-index:3;
+}
+
+.circle {
+  width:120px;
+  height:120px;
+  background:#38bdf8;
+  border-radius:50%;
+  filter:blur(50px);
+}
+
+.square {
+  width:100px;
+  height:100px;
+  background:#a855f7;
+  transform:rotate(45deg);
+  filter:blur(40px);
+}
+
+.triangle {
+  width:0;
+  height:0;
+  border-left:60px solid transparent;
+  border-right:60px solid transparent;
+  border-bottom:100px solid #f59e0b;
+  filter:blur(30px);
+}
+
+/* FLOAT */
 @keyframes float {
   from {transform:translateY(0)}
   to {transform:translateY(-800px)}
@@ -116,7 +163,6 @@ button, select, input {
 <div class="controls">
   <button onclick="download()">📥 Download</button>
   <button onclick="randomize()">🎲 Random</button>
-
   <select onchange="resize(this.value)">
     <option value="420x700">Story</option>
     <option value="600x600">Square</option>
@@ -129,16 +175,16 @@ button, select, input {
     <option value="monospace">Mono</option>
     <option value="cursive">Cursive</option>
   </select>
-
   <input type="color" onchange="changeColor(this.value)">
   <input type="file" onchange="uploadBg(event)">
 </div>
 
 <div id="poster" class="poster">
 
-  <img class="bg" id="bgImg">
+  <img id="bgImg" class="bg">
 
   <div id="stars"></div>
+  <div id="shapes"></div>
 
   <div class="poster-content">
     <div class="quote" contenteditable="true">
@@ -154,9 +200,9 @@ button, select, input {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <script>
-const poster = document.getElementById("poster");
+const poster=document.getElementById("poster");
 
-/* Download */
+/* DOWNLOAD */
 function download(){
   html2canvas(poster,{backgroundColor:null}).then(canvas=>{
     let link=document.createElement("a");
@@ -166,42 +212,44 @@ function download(){
   });
 }
 
-/* Resize */
-function resize(val){
-  let [w,h]=val.split("x");
+/* RESIZE */
+function resize(v){
+  let [w,h]=v.split("x");
   poster.style.width=w+"px";
   poster.style.height=h+"px";
 }
 
-/* Font */
+/* FONT */
 function changeFont(f){
   document.querySelector(".quote").style.fontFamily=f;
 }
 
-/* Color */
+/* COLOR */
 function changeColor(c){
   document.querySelector(".quote").style.color=c;
 }
 
-/* Upload BG */
+/* BACKGROUND UPLOAD FIXED */
 function uploadBg(e){
-  const file=e.target.files[0];
+  let file=e.target.files[0];
   if(file){
-    document.getElementById("bgImg").src=URL.createObjectURL(file);
+    let url=URL.createObjectURL(file);
+    document.getElementById("bgImg").src=url;
   }
 }
 
-/* Random */
+/* RANDOM */
 function randomize(){
   changeColor('#'+Math.floor(Math.random()*16777215).toString(16));
   generateStars();
+  generateShapes();
 }
 
-/* Stars */
+/* STARS */
 function generateStars(){
   const s=document.getElementById("stars");
   s.innerHTML="";
-  for(let i=0;i<50;i++){
+  for(let i=0;i<60;i++){
     let star=document.createElement("div");
     star.className="star";
     star.style.left=Math.random()*100+"%";
@@ -211,7 +259,27 @@ function generateStars(){
   }
 }
 
+/* SHAPES */
+function generateShapes(){
+  const s=document.getElementById("shapes");
+  s.innerHTML="";
+  let types=["circle","square","triangle"];
+
+  for(let i=0;i<10;i++){
+    let d=document.createElement("div");
+    let t=types[Math.floor(Math.random()*types.length)];
+    d.className="shape "+t;
+
+    d.style.top=Math.random()*100+"%";
+    d.style.left=Math.random()*100+"%";
+
+    s.appendChild(d);
+  }
+}
+
+/* INIT */
 generateStars();
+generateShapes();
 </script>
 
 </body>
