@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Poster Ultimate</title>
+<title>Poster Ultimate Final</title>
 
 <style>
 body {
@@ -14,26 +14,28 @@ body {
   background:#020617;
 }
 
-/* CONTROLS */
+/* CONTROLS (2 FULL ROWS) */
 .controls {
+  width:100%;
+  max-width:800px;
+}
+
+.row {
   display:grid;
   grid-template-columns: repeat(3, 1fr);
   gap:10px;
-  margin:15px;
-  width:90%;
-  max-width:600px;
+  margin:10px;
 }
 
-.controls button,
-.controls select,
-.controls input {
-  padding:12px;
-  font-size:14px;
-  border-radius:10px;
+button, select, input {
+  padding:15px;
+  font-size:16px;
+  border-radius:12px;
   border:none;
   cursor:pointer;
   background:#1e293b;
   color:white;
+  width:100%;
 }
 
 /* POSTER */
@@ -47,13 +49,11 @@ body {
   background:#020617;
 }
 
-/* BACKGROUND IMAGE (FIXED) */
+/* BACKGROUND */
 .poster-bg {
   position:absolute;
   inset:0;
-  background-size:cover;
-  background-position:center;
-  opacity:0.4;
+  background:linear-gradient(160deg,#020617,#0f172a);
   z-index:0;
 }
 
@@ -159,31 +159,36 @@ body {
 <body>
 
 <div class="controls">
-  <button onclick="downloadImage()">📥 Image</button>
-  <button onclick="recordVideo()">🎞️ Video</button>
-  <button onclick="randomize()">🎲 Random</button>
 
-  <select onchange="resize(this.value)">
-    <option value="420x700">Story</option>
-    <option value="600x600">Square</option>
-    <option value="800x450">Landscape</option>
-  </select>
+  <!-- ROW 1 -->
+  <div class="row">
+    <button onclick="downloadImage()">📥 Image</button>
+    <button onclick="recordVideo()">🎞️ Video</button>
+    <button onclick="randomize()">🎲 Random</button>
+  </div>
 
-  <select onchange="changeFont(this.value)">
-    <option value="Segoe UI">Default</option>
-    <option value="serif">Serif</option>
-    <option value="monospace">Mono</option>
-    <option value="cursive">Cursive</option>
-  </select>
+  <!-- ROW 2 -->
+  <div class="row">
+    <select onchange="resize(this.value)">
+      <option value="420x700">Story</option>
+      <option value="600x600">Square</option>
+      <option value="800x450">Landscape</option>
+    </select>
 
-  <input type="color" onchange="changeColor(this.value)">
-  <input type="file" onchange="uploadBg(event)">
+    <select onchange="changeFont(this.value)">
+      <option value="Segoe UI">Default</option>
+      <option value="serif">Serif</option>
+      <option value="monospace">Mono</option>
+      <option value="cursive">Cursive</option>
+    </select>
+
+    <input type="number" id="duration" placeholder="Seconds (e.g. 5)" min="2" max="15">
+  </div>
+
 </div>
 
 <div id="poster" class="poster">
-
-  <div id="bg" class="poster-bg"></div>
-
+  <div class="poster-bg"></div>
   <div id="stars"></div>
   <div id="shapes"></div>
 
@@ -195,7 +200,6 @@ body {
       — Noko Coin
     </div>
   </div>
-
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -203,9 +207,9 @@ body {
 <script>
 const poster=document.getElementById("poster");
 
-/* IMAGE DOWNLOAD */
+/* IMAGE */
 function downloadImage(){
-  html2canvas(poster,{backgroundColor:null}).then(canvas=>{
+  html2canvas(poster,{backgroundColor:null,scale:2}).then(canvas=>{
     let link=document.createElement("a");
     link.download="poster.png";
     link.href=canvas.toDataURL();
@@ -213,8 +217,10 @@ function downloadImage(){
   });
 }
 
-/* VIDEO RECORD */
+/* VIDEO FIXED */
 function recordVideo(){
+  let duration=parseInt(document.getElementById("duration").value)||5;
+
   const canvas=document.createElement("canvas");
   canvas.width=poster.offsetWidth;
   canvas.height=poster.offsetHeight;
@@ -239,11 +245,10 @@ function recordVideo(){
 
   function draw(){
     html2canvas(poster,{backgroundColor:null}).then(c=>{
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      ctx.drawImage(c,0,0);
+      ctx.drawImage(c,0,0,canvas.width,canvas.height);
     });
 
-    if(Date.now()-start<4000){
+    if(Date.now()-start<duration*1000){
       requestAnimationFrame(draw);
     }else{
       recorder.stop();
@@ -253,16 +258,7 @@ function recordVideo(){
   draw();
 }
 
-/* BACKGROUND FIX */
-function uploadBg(e){
-  let file=e.target.files[0];
-  if(file){
-    let url=URL.createObjectURL(file);
-    document.getElementById("bg").style.backgroundImage=`url(${url})`;
-  }
-}
-
-/* OTHER FUNCTIONS */
+/* OTHERS */
 function resize(v){
   let [w,h]=v.split("x");
   poster.style.width=w+"px";
@@ -273,12 +269,7 @@ function changeFont(f){
   document.querySelector(".quote").style.fontFamily=f;
 }
 
-function changeColor(c){
-  document.querySelector(".quote").style.color=c;
-}
-
 function randomize(){
-  changeColor('#'+Math.floor(Math.random()*16777215).toString(16));
   generateStars();
   generateShapes();
 }
@@ -292,7 +283,6 @@ function generateStars(){
     star.className="star";
     star.style.left=Math.random()*100+"%";
     star.style.top=Math.random()*100+"%";
-    star.style.animationDuration=(5+Math.random()*5)+"s";
     s.appendChild(star);
   }
 }
@@ -307,10 +297,8 @@ function generateShapes(){
     let d=document.createElement("div");
     let t=types[Math.floor(Math.random()*types.length)];
     d.className="shape "+t;
-
     d.style.top=Math.random()*100+"%";
     d.style.left=Math.random()*100+"%";
-
     s.appendChild(d);
   }
 }
